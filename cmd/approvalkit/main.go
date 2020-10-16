@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/docopt/docopt-go"
-	"github.com/mercadolibre/fury_gokit_cli/internal/git"
+	"github.com/sorfino/approvalkit-cli/internal/git"
 )
 
 var (
@@ -21,7 +21,7 @@ func main() {
 Options:
  -h --help    Show this screen`
 
-	opts, err := docopt.ParseDoc(usage)
+	_, err := docopt.ParseDoc(usage)
 	if err != nil {
 		fmt.Printf("fatal :%v", err)
 		os.Exit(-1)
