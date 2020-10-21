@@ -2,78 +2,43 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/docopt/docopt-go"
-	"github.com/sorfino/approvalkit-cli/internal/git"
-)
-
-var (
-	_excluded = []string{".fury", "Dockerfile.runtime", ".git", ".golangci.yml", "CHANGELOG.md"}
+	"github.com/sorfino/approvalkit-cli/cmd/approvalkit/internal"
 )
 
 func main() {
 	usage := `Usage:
- approvalkit template <cmd>
+ approvalkit <cmd>
  approvalkit -h | --help
 
 Options:
  -h --help    Show this screen`
 
-	_, err := docopt.ParseDoc(usage)
+	cmds, err := docopt.ParseDoc(usage)
 	if err != nil {
 		fmt.Printf("fatal :%v", err)
 		os.Exit(-1)
 	}
 
-	fmt.Println("working ...")
-
-	scaffoldingDir, err := git.Clone("git@github.com:mercadolibre/fury_mp-approval-go-prj-template.git")
+	cmd, err := cmds.String("<cmd>")
 	if err != nil {
 		fmt.Printf("fatal :%v", err)
 		os.Exit(-1)
 	}
 
-	defer os.RemoveAll(scaffoldingDir)
-
-	destinationDir, _ := os.Getwd()
-	if err := CleanUp(destinationDir); err != nil {
-		fmt.Printf("fatal :%v", err)
-		os.Exit(-1)
+	switch {
+	case strings.EqualFold(cmd, "version"):
+		fmt.Printf("version %s\n", _version)
+		os.Exit(0)
+	case strings.EqualFold(cmd, "template"):
+		fmt.Println("working ...")
+		internal.CopyFromTemplate()
+		fmt.Println("done.")
+	default:
+		os.Exit(1)
 	}
 
-	if err := git.CheckoutIndex(scaffoldingDir, destinationDir); err != nil {
-		fmt.Printf("error :%v.\n", err)
-	}
-
-	fmt.Println("done.")
-}
-
-func Contains(a []string, x string) bool {
-	for i := range a {
-		if x == a[i] {
-			return true
-		}
-	}
-	return false
-}
-
-func CleanUp(dirName string) error {
-	entries, err := ioutil.ReadDir(dirName)
-	if err != nil {
-		return err
-	}
-
-	for i := range entries {
-		if Contains(_excluded, entries[i].Name()) {
-			continue
-		}
-
-		if err := os.RemoveAll(entries[i].Name()); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
